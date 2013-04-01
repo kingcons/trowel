@@ -1,5 +1,19 @@
 (in-package :trowel)
 
+;; On Jump Tables:
+;; A jump table is basically a compiled switch statement. A JSR
+;; pushes the initial PC on the stack. A Jump Table pulls it off
+;; and screws with it to decide where to jump. In practice, this
+;; means that the possible destinations of a jump table immediately
+;; follow the JSR instruction in RAM. The problem is we don't know
+;; how many possible jumps there are, i.e. how many u16s to read.
+
+;; A possible solution:
+;; When a jump subroutine calls PLA before RTS, i.e. modifies the
+;; return address on the stack, immediately backtrack to the return
+;; address and try jumping to each word after the JSR until error.
+;; TODO: What about data that follow jump tables, i.e. WSelectBufferTemplate?
+
 ;; A very simple set of exploratory decompiling tools.
 ;; Example:
 ;> (load-game "smb")
