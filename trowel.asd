@@ -5,9 +5,10 @@
   :license "BSD"
   :author "Brit Butler <redline6561@gmail.com>"
   :pathname "src/"
-  :depends-on (:famiclom)
+  :depends-on (:famiclom :graph-utils)
   :serial t
   :components ((:file "packages")
+               (:file "jumps")
                (:file "decompiler"))
   :in-order-to ((test-op (load-op trowel-tests)))
   :perform (test-op :after (op c)

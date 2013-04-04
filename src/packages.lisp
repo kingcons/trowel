@@ -11,6 +11,9 @@
   (:import-from :6502 #:cpu-pc
                       #:disasm
                       #:disasm-ins
+                      #:get-instruction
                       #:sexpify-instruction
                       #:current-instruction)
-  (:import-from :romreader #:rom-metadata))
+  (:import-from :romreader #:rom-metadata)
+  (:import-from :alexandria #:if-let)
+  (:import-from :graph-utils #:make-graph #:add-node #:add-edge))
