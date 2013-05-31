@@ -25,7 +25,7 @@
 (defun load-game (name)
   "Reset *program* and *asm-map*. Load a new rom, NAME, to decompile."
   (setf *program* (make-graph :directed? t) *asm-map* (make-hash-table))
-  (load-rom (app-path (format nil "roms/~A.nes" name))))
+  (load-rom (app-path "roms/~A.nes" name)))
 
 (defun now ()
   "Disassemble the current instruction."
@@ -50,22 +50,29 @@
        collect asm into code until (member (first asm) branch-ops)
        finally (return (list address code)))))
 
+(defun add-basic-block (start code)
+  "Add a basic block for CODE to the CFG, keyed by START in *asm-map*."
+  (setf (gethash start *asm-map*) (add-node *program* code)))
+
 (defun decompile-block (start)
-  "Decompile the block at START returning the last opcode's address."
+  "Decompile the block at START returning the CFG node and the
+addresses of its children."
   (destructuring-bind (end code) (get-basic-block start)
-    (let ((node (add-node *program* code)))
-      (setf (gethash start *asm-map*) node)
-      (list node end))))
+    (list (add-basic-block start code)
+          (compute-jumps end))))
+
+(defun process-child (address parent)
+  "Take the ADDRESS of a child and add an edge to it from PARENT,
+recursively calling BUILD-CFG if necessary."
+  (if-let (seen-p (gethash address *asm-map*))
+    (add-edge *program* parent seen-p)
+    (add-edge *program* parent (build-cfg address))))
 
 (defun build-cfg (pc)
   "Given a PC address for the root, build a Control Flow Graph for the
 currently loaded ROM."
-  (destructuring-bind (node-id jump-addr) (decompile-block pc)
-    (loop for destination in (compute-jumps jump-addr)
-       do (if-let (seen-p (gethash destination *asm-map*))
-            (add-edge *program* node-id seen-p)
-            ;; KLUDGE: Recursive DFS! Blow all the stacks!
-            (add-edge *program* node-id (build-cfg destination))))
+  (destructuring-bind (node-id children) (decompile-block pc)
+    (mapc (lambda (x) (process-child x node-id)) children)
     node-id))
 
 (defun decompile-rom ()
