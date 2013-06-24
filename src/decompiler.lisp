@@ -22,14 +22,25 @@
 (defvar *asm-map* (make-hash-table)
   "A hash-table with addresses as keys and node ids as values.")
 
+(defun get-node (id)
+  "Get the node from *program* with the given ID."
+  (graph-utils:lookup-node *program* id))
+
 (defun load-game (name)
   "Reset *program* and *asm-map*. Load a new rom, NAME, to decompile."
   (setf *program* (make-graph :directed? t) *asm-map* (make-hash-table))
-  (load-rom (app-path "roms/~A.nes" name)))
+  ;; Place the game code at the beginning of NES mapper memory.
+  ;; NOTE: This will not work for non-NROM games.
+  (let ((rom (romreader:load-rom (app-path "roms/~A.nes" name))))
+    (if (zerop (getf (romreader:rom-metadata rom) :mapper-id))
+        (progn
+          (setf (get-range #x8000) (romreader:rom-prg rom))
+          (reset *cpu*))
+        (error "Only NROM mapped games are currently supported."))))
 
 (defun now ()
   "Disassemble the current instruction."
-  (current-instruction (nes-cpu *nes*)))
+  (current-instruction *cpu*))
 
 (defun compute-jumps (origin)
   "Compute all the endpoints of the jump instruction at ORIGIN."
@@ -41,7 +52,7 @@
     (#x60        (compute-jump :rts origin))
     (otherwise   (compute-jump :branch origin))))
 
-(defun get-basic-block (&optional (pc (cpu-pc (nes-cpu *nes*))))
+(defun get-basic-block (&optional (pc (cpu-pc *cpu*)))
   "Get the opcodes from the supplied PC to the next branch."
   (let ((branch-ops '(:bcc :bcs :beq :bmi :bne :bpl :bvc :bvs
                       :brk :jmp :jsr :rti :rts)))
@@ -68,6 +79,12 @@ recursively calling BUILD-CFG if necessary."
     (add-edge *program* parent seen-p)
     (add-edge *program* parent (build-cfg address))))
 
+;; differences from NESrev:
+;; NESrev builds up a metadata table listing each byte in rom
+;;  as one of: CODE, LABEL, DATA
+;; NESrev marks opcode args as code, not data
+;; NESrev recursively processes all 3 code vectors: fffa, fffc, fffe
+
 (defun build-cfg (pc)
   "Given a PC address for the root, build a Control Flow Graph for the
 currently loaded ROM."
@@ -77,5 +94,5 @@ currently loaded ROM."
 
 (defun decompile-rom ()
   "Decompile the current binary."
-  (build-cfg (cpu-pc (nes-cpu *nes*)))
+  (build-cfg (cpu-pc *cpu*))
   *program*)

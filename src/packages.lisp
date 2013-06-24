@@ -1,15 +1,13 @@
 (defpackage :trowel
   (:use :cl)
-  (:import-from :famiclom-conf #:app-path)
-  (:import-from :famiclom #:load-rom
-                          #:nes-cpu
-                          #:nes-mapper
-                          #:get-byte
-                          #:get-word
-                          #:reset
-                          #:*nes*)
-  (:import-from :6502 #:cpu-pc
+  (:import-from :trowel-conf #:app-path)
+  (:import-from :6502 #:*cpu*
+                      #:cpu-pc
+                      #:reset
                       #:disasm
+                      #:get-byte
+                      #:get-word
+                      #:get-range
                       #:disasm-ins
                       #:get-instruction
                       #:sexpify-instruction

@@ -22,7 +22,7 @@ points to a valid opcode."
 destinations of the jump."))
 
 (defmethod compute-jump ((opcode (eql :brk)) origin)
-  (6502::stack-push-word (1+ origin) (nes-cpu *nes*))
+  (6502::stack-push-word (1+ origin) *cpu*)
   (list (get-word #xfffe)))
 
 (defmethod compute-jump ((opcode (eql :jmp)) origin)
@@ -31,24 +31,24 @@ destinations of the jump."))
                        (#x6c (get-word (get-word (1+ origin)) t)))))
     (if (= origin destination) ; branch-to-self, waiting for an NMI
         (progn ; go ahead and do an NMI
-          (6502::stack-push-word origin (nes-cpu *nes*))
+          (6502::stack-push-word origin *cpu*)
           (list (get-word #xfffa)))
         (list destination))))
 
 (defmethod compute-jump ((opcode (eql :jsr)) origin)
   (let ((length (first (disasm-ins origin))))
-    (6502::stack-push-word (+ origin length) (nes-cpu *nes*))
+    (6502::stack-push-word (+ origin length) *cpu*)
     (if (jump-table-p origin)
         (list-jumps (+ origin length))
         (list (get-word (1+ origin))))))
 
 (defmethod compute-jump ((opcode (eql :rti)) origin)
   (declare (ignore origin))
-  (list (6502::stack-pop-word (nes-cpu *nes*))))
+  (list (6502::stack-pop-word *cpu*)))
 
 (defmethod compute-jump ((opcode (eql :rts)) origin)
   (declare (ignore origin))
-  (list (6502::stack-pop-word (nes-cpu *nes*))))
+  (list (6502::stack-pop-word *cpu*)))
 
 (defmethod compute-jump ((opcode (eql :branch)) origin)
   (let ((offset (get-byte (1+ origin)))
