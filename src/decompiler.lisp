@@ -26,6 +26,11 @@
   "Get the node from *program* with the given ID."
   (graph-utils:lookup-node *program* id))
 
+(defun map-game (rom)
+  "Map ROM's code into *ram* and set the CPU's PC to the start vector."
+  (setf (get-range #x8000) (romreader:rom-prg rom))
+  (reset *cpu*))
+
 (defun load-game (name)
   "Reset *program* and *asm-map*. Load a new rom, NAME, to decompile."
   (setf *program* (make-graph :directed? t) *asm-map* (make-hash-table))
@@ -33,9 +38,7 @@
   ;; NOTE: This will not work for non-NROM games.
   (let ((rom (romreader:load-rom (app-path "roms/~A.nes" name))))
     (if (zerop (getf (romreader:rom-metadata rom) :mapper-id))
-        (progn
-          (setf (get-range #x8000) (romreader:rom-prg rom))
-          (reset *cpu*))
+        (map-game rom)
         (error "Only NROM mapped games are currently supported."))))
 
 (defun now ()
