@@ -2,6 +2,7 @@
   (:use :cl)
   (:import-from :trowel-conf #:app-path)
   (:import-from :6502 #:*cpu*
+                      #:*opcode-meta*
                       #:cpu-pc
                       #:reset
                       #:disasm
@@ -9,7 +10,6 @@
                       #:get-word
                       #:get-range
                       #:disasm-ins
-                      #:get-instruction
                       #:sexpify-instruction
                       #:current-instruction)
   (:import-from :romreader #:rom-metadata)

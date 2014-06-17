@@ -22,6 +22,10 @@
 (defvar *asm-map* (make-hash-table)
   "A hash-table with addresses as keys and node ids as values.")
 
+(defun get-instruction (opcode)
+  "Get the mnemonic matching OPCODE from 6502's *opcode-meta*."
+  (first (aref *opcode-meta* opcode)))
+
 (defun get-node (id)
   "Get the node from *program* with the given ID."
   (graph-utils:lookup-node *program* id))
