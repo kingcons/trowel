@@ -14,4 +14,4 @@
                       #:current-instruction)
   (:import-from :romreader #:rom-metadata)
   (:import-from :alexandria #:if-let)
-  (:import-from :graph-utils #:make-graph #:add-node #:add-edge))
+  (:import-from :graph #:graph #:add-node #:add-edge))

@@ -16,7 +16,7 @@
 ; ... do a bit, crash.
 ;> (inspect *program*)
 
-(defvar *program* (make-graph :directed? t)
+(defvar *program* (make-instance 'graph)
   "A control flow graph of the program.")
 
 (defvar *asm-map* (make-hash-table)
@@ -26,10 +26,6 @@
   "Get the mnemonic matching OPCODE from 6502's *opcode-meta*."
   (first (aref *opcode-meta* opcode)))
 
-(defun get-node (id)
-  "Get the node from *program* with the given ID."
-  (graph-utils:lookup-node *program* id))
-
 (defun map-game (rom)
   "Map ROM's code into *ram* and set the CPU's PC to the start vector."
   (setf (get-range #x8000) (romreader:rom-prg rom))
@@ -37,7 +33,7 @@
 
 (defun load-game (name)
   "Reset *program* and *asm-map*. Load a new rom, NAME, to decompile."
-  (setf *program* (make-graph :directed? t) *asm-map* (make-hash-table))
+  (setf *program* (make-instance 'graph) *asm-map* (make-hash-table))
   ;; Place the game code at the beginning of NES mapper memory.
   ;; NOTE: This will not work for non-NROM games.
   (let ((rom (romreader:load-rom (app-path "roms/~A.nes" name))))
@@ -69,8 +65,10 @@
        finally (return (list address code)))))
 
 (defun add-basic-block (start code)
-  "Add a basic block for CODE to the CFG, keyed by START in *asm-map*."
-  (setf (gethash start *asm-map*) (add-node *program* code)))
+  "Add the basic block to the asm-map, and note the address in the graph."
+  ;; NOTE: There is no protection here in case of collisions.
+  (setf (gethash start *asm-map*) code)
+  (add-node *program* start))
 
 (defun decompile-block (start)
   "Decompile the block at START returning the CFG node and the
@@ -83,8 +81,8 @@ addresses of its children."
   "Take the ADDRESS of a child and add an edge to it from PARENT,
 recursively calling BUILD-CFG if necessary."
   (if-let (seen-p (gethash address *asm-map*))
-    (add-edge *program* parent seen-p)
-    (add-edge *program* parent (build-cfg address))))
+    (add-edge *program* (list parent seen-p))
+    (add-edge *program* (list parent (build-cfg address)))))
 
 ;; differences from NESrev:
 ;; NESrev builds up a metadata table listing each byte in rom
