@@ -5,7 +5,7 @@
   :license "BSD"
   :author "Brit Butler <redline6561@gmail.com>"
   :pathname "src/"
-  :depends-on (:cl-6502 :romreader :graph)
+  :depends-on (:cl-6502 :romreader :graph :screamer)
   :serial t
   :components ((:file "packages")
                (:file "jumps")
