@@ -10,6 +10,7 @@
                       #:get-word
                       #:get-range
                       #:disasm-ins
+                      #:print-instruction
                       #:sexpify-instruction
                       #:current-instruction)
   (:import-from :romreader #:rom-metadata)

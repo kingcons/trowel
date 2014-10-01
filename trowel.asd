@@ -9,6 +9,7 @@
   :serial t
   :components ((:file "packages")
                (:file "jumps")
+               (:file "search")
                (:file "decompiler"))
   :in-order-to ((test-op (load-op trowel-tests)))
   :perform (test-op :after (op c)
